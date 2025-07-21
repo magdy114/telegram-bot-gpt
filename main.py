@@ -44,7 +44,7 @@ def main():
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("limits", limits))
-    dp.add_handler(CommandHandler("خطة_الشرح", send_plan))
+dp.add_handler(CommandHandler("plan", send_plan))
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
     updater.start_polling()
