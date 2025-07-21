@@ -37,6 +37,9 @@ def send_plan(update: Update, context: CallbackContext):
 
 def main():
     TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not TOKEN:
+        raise ValueError("❌ خطأ: لم يتم تعيين متغير TELEGRAM_BOT_TOKEN في البيئة")
+
     updater = Updater(token=TOKEN, use_context=True)
     dp = updater.dispatcher
 
