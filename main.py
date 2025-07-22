@@ -20,3 +20,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     reply = completion.choices[0].message["content"]
     await update.message.reply_text(reply, parse_mode=telegram.constants.ParseMode.MARKDOWN)
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+import openai
+import os
