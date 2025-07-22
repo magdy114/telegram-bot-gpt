@@ -32,3 +32,15 @@ def main():
 
 if __name__ == "__main__":
     main()
+from telegram.ext import MessageHandler, filters
+
+# تابع جديد للتعامل مع الرسائل النصية مثل "أعطني مثال"
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.lower()
+    if "مثال" in text:
+        await update.message.reply_text("📌 مثال على خطة الدرس:\n1. مراجعة المفاهيم\n2. حل تمرينات\n3. تطبيق واقعي\n4. تقويم سريع")
+    else:
+        await update.message.reply_text("أنا هنا للمساعدة في مادة الرياضيات. جرب أمرًا مثل /plan")
+
+# أضف هذا الهاندلر في `main()` داخل التطبيق
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
