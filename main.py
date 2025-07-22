@@ -1,36 +1,34 @@
-from telegram import Update, InputFile
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-import os
+import logging
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 
-# رسالة الترحيب
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("\U0001F44B مرحباً! أنا مساعدك الذكي في مادة الرياضيات \U0001F9E0\nاكتب /plan لرؤية خطة الدرس أو /test لحل اختبار.")
+BOT_TOKEN = "8069508243:AAH9yMewI2BXe2v55M3z-ex5UwwF-s4XJns"
 
-# إرسال خطة الدرس من ملف نصي
-async def send_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        with open("plan_text.txt", "r", encoding="utf-8") as f:
-            content = f.read()
-        await update.message.reply_text(content)
-    except FileNotFoundError:
-        await update.message.reply_text("عذرًا، لم أجد خطة الدرس حتى الآن.")
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
 
-# إرسال اختبار بسيط
-async def test(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    question = "ما نهاية الدالة التالية: f(x) = (x^2 - 9)/(x - 3) عندما x تقترب من 3؟\n"
-    options = ["6", "9", "3", "0"]
-    await update.message.reply_poll(
-        question=question,
-        options=options,
-        type='quiz',
-        correct_option_id=0
-    )
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("مرحبًا، أنا مساعدك الذكي في مادة الرياضيات 🧠📚")
 
-# إعداد التطبيق وربط الأوامر
-app = ApplicationBuilder().token("YOUR_BOT_TOKEN").build()
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("plan", send_plan))
-app.add_handler(CommandHandler("test", test))
+async def plan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("📘 هذه خطة الدرس: \n1. المفاهيم\n2. الأمثلة\n3. التدريب\n4. التقويم")
 
-# تشغيل البوت
-app.run_polling()
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    msg = update.message.text.lower()
+    if "نهاية" in msg or "النهايات" in msg:
+        await update.message.reply_text("📌 النهاية هي القيمة التي تقترب منها الدالة عندما تقترب x من قيمة معينة.")
+    else:
+        await update.message.reply_text("أنا هنا للمساعدة في مادة الرياضيات. جرّب مثلاً: /plan")
+
+def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("plan", plan_command))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
