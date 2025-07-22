@@ -1,54 +1,46 @@
 import os
+import logging
 import openai
-from gtts import gTTS
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes
+)
 
-# إعداد مفتاح OpenAI من متغير البيئة
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# تفعيل السجل (للتصحيح إن لزم)
+logging.basicConfig(level=logging.INFO)
 
-# تفعيل الصوت
-VOICE_MODE = True
+# تحميل التوكينات من المتغيرات البيئية
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
-def handle_message(update: Update, context: CallbackContext):
-    user_input = update.message.text
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": user_input}]
-        )
-        reply = response.choices[0].message["content"]
-        update.message.reply_text(reply)
+# التأكد من وجود التوكينات
+if not TELEGRAM_BOT_TOKEN:
+    raise ValueError("❌ خطأ: لم يتم تعيين TELEGRAM_BOT_TOKEN في البيئة")
 
-        if VOICE_MODE:
-            tts = gTTS(reply, lang='ar')
-            tts.save("response.mp3")
-            with open("response.mp3", 'rb') as f:
-                update.message.reply_voice(f)
+if not OPENAI_API_KEY:
+    raise ValueError("❌ خطأ: لم يتم تعيين OPENAI_API_KEY في البيئة")
 
-    except Exception as e:
-        update.message.reply_text(f"❌ حدث خطأ: {e}")
+# تفعيل مفتاح OpenAI
+openai.api_key = OPENAI_API_KEY
 
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text("أهلًا بك في مساعد مجدي للرياضيات. أرسل سؤالك أو اكتب /خطة_الشرح لرؤية الدروس.")
+# أمر: /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("مرحباً! أنا مساعدك الذكي في مادة الرياضيات 🎓🧠")
 
-def send_plan(update: Update, context: CallbackContext):
-    update.message.reply_text("📘 خطة الشرح:\n1. النهايات\n2. الاتصال\n3. المشتقات\n...")
+# أمر: /study_plan
+async def send_plan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("📘 هذه خطة الدراسة الخاصة بك: \n1. النهايات\n2. الاتصال\n3. المشتقات\n🔁 تابع التقدم معي خطوة بخطوة!")
 
+# نقطة البداية
 def main():
-    TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-    if not TOKEN:
-        raise ValueError("❌ خطأ: لم يتم تعيين متغير TELEGRAM_BOT_TOKEN في البيئة")
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    updater = Updater(token=TOKEN, use_context=True)
-    dp = updater.dispatcher
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("study_plan", send_plan))
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("خطة_الشرح", send_plan))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+    app.run_polling()
 
-    updater.start_polling()
-    updater.idle()
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
